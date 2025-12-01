@@ -1,0 +1,21 @@
+name: Build & Deploy on Local VM
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted   # <===== IMPORTANT
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: docker build -t local-hello:latest .
+
+      - name: Run Container
+        run: |
+          docker stop hello || true
+          docker rm hello || true
+          docker run -d --name hello -p 3000:3000 local-hello:latest
