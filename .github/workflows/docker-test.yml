@@ -1,4 +1,4 @@
-name: Build & Deploy on Local VM
+name: Build and Deploy Docker WebApp
 
 on:
   push:
@@ -6,16 +6,18 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted   # <===== IMPORTANT
-
+    runs-on: self-hosted        # IMPORTANT: runs on your local Ubuntu VM
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Build Docker Image
-        run: docker build -t local-hello:latest .
+        run: docker build -t webapp:latest .
 
-      - name: Run Container
+      - name: Stop old container if exists
         run: |
-          docker stop hello || true
-          docker rm hello || true
-          docker run -d --name hello -p 3000:3000 local-hello:latest
+          docker stop webapp || true
+          docker rm webapp || true
+
+      - name: Run new container
+        run: docker run -d -p 8080:8080 --name webapp webapp:latest
