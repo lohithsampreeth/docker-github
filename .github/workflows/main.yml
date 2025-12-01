@@ -1,4 +1,4 @@
-name: Build and Push Hello World Docker Image
+name: Build, Push, Deploy (Password SSH)
 
 on:
   push:
@@ -21,8 +21,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Image
+      - name: Build Docker Image
         run: docker build -t ghcr.io/${{ github.repository }}/helloworld:latest .
 
-      - name: Push Image
+      - name: Push Docker Image
         run: docker push ghcr.io/${{ github.repository }}/helloworld:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Ubuntu VM (via Password)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+            sudo docker pull ghcr.io/${{ github.repository }}/helloworld:latest
+            sudo docker run --rm ghcr.io/${{ github.repository }}/helloworld:latest
